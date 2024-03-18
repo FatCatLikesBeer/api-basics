@@ -1,35 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const uuidv4  = require('uuid').v4;
+const { users, messages } = require('../models/index.js')
+
+router.use((req, res, next) => {
+  req.me = users[1];
+  next();
+});
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
-
-let users = {
-  1: {
-    id: '1',
-    username: 'Robin Wieruch',
-  },
-  2: {
-    id: '2',
-    username: 'Dave Davis',
-  },
-};
-
-let messages = {
-  1: {
-    id: '1',
-    text: 'Hello World',
-    userId: '1',
-  },
-  2: {
-    id: '2',
-    text: 'Bye World',
-    userId: '2',
-  },
-};
 
 router.get('/users', (req, res) => {
   res.send(Object.values(users));
@@ -52,6 +34,7 @@ router.post('/messages', (req, res) => {
   const message = {
     id,
     text: req.body.text,
+    userId: req.me.id,
   };
 
   messages[id] = message;
@@ -59,5 +42,19 @@ router.post('/messages', (req, res) => {
   return res.send(message);
 });
 
+router.delete('/messages/:messageId', (req, res, next) => {
+  const {
+  [req.params.messageId]: message,
+  ...otherMessages
+} = messages;
+
+messages = otherMessages;
+
+return res.send(message);
+});
+
+router.get('/session', (req, res) => {
+  res.send(users[req.me.id]);
+})
 
 module.exports = router;
